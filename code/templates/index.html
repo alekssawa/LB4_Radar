@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-time Data</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div id="chart"></div>
+
+    <script>
+        function fetchGraphData() {
+            fetch('/graph-data')
+                .then(response => response.json())
+                .then(data => {
+                    const graphs = JSON.parse(data);
+                    Plotly.react('chart', graphs.data, graphs.layout);
+                })
+                .catch(error => console.error('Error fetching graph data:', error));
+        }
+
+        // Fetch graph data every second
+        setInterval(fetchGraphData, 1000);
+    </script>
+</body>
+</html>
