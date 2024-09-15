@@ -3,6 +3,7 @@
 <head>
     <title>Real-time Data</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 <h1 style="text-align: center;">Radar</h1>
@@ -21,6 +22,44 @@
 
         // Fetch graph data every second
         setInterval(fetchGraphData, 1000);
+    </script>
+    <form id="configForm">
+        <label for="measurementsPerRotation">measurementsPerRotation:</label>
+        <input type="number" id="measurementsPerRotation" name="measurementsPerRotation" required><br><br>
+
+        <label for="rotationSpeed">rotationSpeed:</label>
+        <input type="number" id="rotationSpeed" name="rotationSpeed" required><br><br>
+
+        <label for="targetSpeed">targetSpeed:</label>
+        <input type="number" id="targetSpeed" name="targetSpeed" required><br><br>
+
+        <button type="button" onclick="submitConfig()">Отправить</button>
+    </form>
+    <script>
+        function submitConfig() {
+            var measurementsPerRotation = $('#measurementsPerRotation').val();
+            var rotationSpeed = $('#rotationSpeed').val();
+            var targetSpeed = $('#targetSpeed').val();
+
+            var data = {
+                "measurementsPerRotation": parseInt(measurementsPerRotation),
+                "rotationSpeed": parseInt(rotationSpeed),
+                "targetSpeed": parseInt(targetSpeed)
+            };
+
+            $.ajax({
+                url: '/config',
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    alert("Параметры успешно отправлены: " + JSON.stringify(response));
+                },
+                error: function(error) {
+                    alert("Ошибка при отправке параметров: " + error.responseText);
+                }
+            });
+        }
     </script>
 </body>
 </html>
