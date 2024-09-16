@@ -5,6 +5,15 @@ import json
 # Переменная для хранения кэшированных данных
 cached_data = None
 
+async def send_config_to_websocket(config_data):
+    uri = "ws://localhost:4000"  # Замените на адрес вашего WebSocket сервера
+    print(config_data)
+
+    async with websockets.connect(uri) as websocket:
+        await websocket.send(config_data)
+        response = await websocket.recv()
+        return response
+
 async def connect():
     global cached_data
     uri = "ws://localhost:4000"

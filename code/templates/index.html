@@ -21,7 +21,7 @@
         }
 
         // Fetch graph data every second
-        setInterval(fetchGraphData, 1000);
+        setInterval(fetchGraphData, 500);
     </script>
     <form id="configForm">
         <label for="measurementsPerRotation">measurementsPerRotation:</label>
@@ -35,29 +35,32 @@
 
         <button type="button" onclick="submitConfig()">Отправить</button>
     </form>
+
     <script>
         function submitConfig() {
-            var measurementsPerRotation = $('#measurementsPerRotation').val();
-            var rotationSpeed = $('#rotationSpeed').val();
-            var targetSpeed = $('#targetSpeed').val();
+            const measurementsPerRotation = document.getElementById('measurementsPerRotation').value;
+            const rotationSpeed = document.getElementById('rotationSpeed').value;
+            const targetSpeed = document.getElementById('targetSpeed').value;
 
-            var data = {
-                "measurementsPerRotation": parseInt(measurementsPerRotation),
-                "rotationSpeed": parseInt(rotationSpeed),
-                "targetSpeed": parseInt(targetSpeed)
+            const config = {
+                measurementsPerRotation: parseInt(measurementsPerRotation, 10),
+                rotationSpeed: parseInt(rotationSpeed, 10),
+                targetSpeed: parseInt(targetSpeed, 10)
             };
 
-            $.ajax({
-                url: '/config',
-                type: 'PUT',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(response) {
-                    alert("Параметры успешно отправлены: " + JSON.stringify(response));
+            fetch('http://127.0.0.1:5000/send-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
                 },
-                error: function(error) {
-                    alert("Ошибка при отправке параметров: " + error.responseText);
-                }
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Ответ от сервера:', data);
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
             });
         }
     </script>

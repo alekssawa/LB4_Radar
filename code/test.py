@@ -1,16 +1,19 @@
+import requests
 import json
 
-# Пример данных
-data = {
-    'pulseDuration': 1,
-    'scanAngle': 236,
-    'echoResponses': [{'time': 0.0006196959152395295, 'power': 0.0533237188393241}],
-    'distance': 92.95
+# Конфигурация для отправки
+config = {
+    "measurementsPerRotation": 360,
+    "rotationSpeed": 10,
+    "targetSpeed": 500
 }
 
-# Проверяем сериализацию данных
-try:
-    json_string = json.dumps(data)
-    print("JSON сериализация успешна:", json_string)
-except TypeError as e:
-    print("Ошибка сериализации JSON:", e)
+# URL сервера
+url = "http://localhost:4000/config"
+
+# Отправка PUT-запроса
+response = requests.put(url, headers={"Content-Type": "application/json"}, data=json.dumps(config))
+
+# Вывод ответа от сервера
+print(f"Статус-код: {response.status_code}")
+print(f"Ответ от сервера: {response.text}")

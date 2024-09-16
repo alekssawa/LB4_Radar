@@ -1,11 +1,16 @@
+#app.py
 from flask import Flask, render_template, jsonify, request
+import requests
+from flask_cors import CORS
 import websockets
 import logging
 import asyncio
 import plotly.graph_objects as go
-from client import get_data, connect
+from client import get_data, connect, send_config_to_websocket
+import json
 
 app = Flask(__name__)
+CORS(app)  # Разрешаем CORS для всех доменов и методов
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -47,35 +52,23 @@ def graph_data():
     else:
         return jsonify({"error": "Нет данных"})
 
-@app.route('/config', methods=['PUT'])
-def update_config():
-    try:
-        data = request.get_json()
-        measurements_per_rotation = data.get('measurementsPerRotation')
-        rotation_speed = data.get('rotationSpeed')
-        target_speed = data.get('targetSpeed')
 
-        if measurements_per_rotation is None or rotation_speed is None or target_speed is None:
-            return jsonify({"error": "Недостаточно данных"}), 400
+@app.route('/send-config', methods=['POST'])
+def send_config():
+    # Получаем данные из запроса
+    data = request.json
 
-        # Форматируем данные для отправки через WebSocket
-        ws_data = {
-            "measurementsPerRotation": measurements_per_rotation,
-            "rotationSpeed": rotation_speed,
-            "targetSpeed": target_speed
-        }
+    # URL целевого сервера
+    url = "http://localhost:4000/config"
 
-        # Отправляем данные на WebSocket сервер
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        response = loop.run_until_complete(send_config_to_websocket(str(ws_data)))
-        loop.close()
+    # Отправка PUT-запроса на целевой сервер
+    response = requests.put(url, headers={"Content-Type": "application/json"}, data=json.dumps(data))
 
-        return jsonify({"response": response}), 200
-
-    except Exception as e:
-        print(f"Ошибка: {e}")
-        return jsonify({"error": "Произошла ошибка на сервере"}), 500
+    # Возвращаем ответ от целевого сервера
+    return jsonify({
+        "status_code": response.status_code,
+        "response": response.text
+    })
 
 if __name__ == "__main__":
     import threading
