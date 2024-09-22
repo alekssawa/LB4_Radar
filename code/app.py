@@ -41,9 +41,14 @@ def get_config():
         response_data = response.json()
 
         config_data = response_data.get('config', {})  # Извлекаем данные конфигурации
+        measurementsPerRotation = config_data.get('measurementsPerRotation', 0)
+        rotationSpeed = config_data.get('rotationSpeed', 0)
+        targetSpeed = config_data.get('targetSpeed', 0)
         return jsonify({
-            "status_code": response.status_code,
-            "config": config_data
+            "measurementsPerRotation": measurementsPerRotation,
+            "rotationSpeed": rotationSpeed,
+            "targetSpeed": targetSpeed
+            #"config_data": config_data
         })
     else:
         return jsonify({
@@ -109,12 +114,22 @@ def send_config():
 
     # Отправка PUT-запроса на целевой сервер
     response = requests.put(url, headers={"Content-Type": "application/json"}, data=json.dumps(data))
-
+    if response.status_code == 200:
+        return jsonify({
+            "status_code": response.status_code,
+            "response": "Конфигурация обновлена",
+            "updated_config": data  # Отправляем обновлённую конфигурацию
+        })
+    else:
+        return jsonify({
+            "status_code": response.status_code,
+            "error": "Ошибка отправки конфигурации"
+        })
     # Возвращаем ответ от целевого сервера
-    return jsonify({
-        "status_code": response.status_code,
-        "response": response.text
-    })
+    # return jsonify({
+    #     "status_code": response.status_code,
+    #     "response": response.text
+    # })
 
 
 
