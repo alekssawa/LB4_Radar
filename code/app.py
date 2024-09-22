@@ -28,9 +28,39 @@ def start_event_loop():
     loop.create_task(start_websocket_connection())
     loop.run_forever()
 
+@app.route('/get-config', methods=['POST'])
+def get_config():
+
+    # URL целевого сервера
+    url = "http://localhost:4000/config"
+
+    # Отправка PUT-запроса на целевой сервер
+    response = requests.put(url, headers={"Content-Type": "application/json"})
+
+    if response.status_code == 200:
+        response_data = response.json()
+
+        config_data = response_data.get('config', {})  # Извлекаем данные конфигурации
+        return jsonify({
+            "status_code": response.status_code,
+            "config": config_data
+        })
+    else:
+        return jsonify({
+            "status_code": response.status_code,
+            "error": "Не удалось получить данные"
+        })
 @app.route('/')
 def index():
-    return render_template('index.html')
+    response = requests.post('http://localhost:5000/get-config')
+
+    if response.status_code == 200:
+        json_data = response.json()  # Преобразуем ответ в JSON
+    else:
+        json_data = {"error": "Не удалось получить конфигурацию"}
+
+    return render_template('index.html', json_data=json_data)
+    #return render_template('index.html')
 
 @app.route('/graph-data')
 def graph_data():
@@ -38,11 +68,27 @@ def graph_data():
     if data:
         distance = data.get('distance', 0)
         scanAngle = data.get('scanAngle', 0)
+        power = data.get('echoResponses', [{}])[0].get('power', 0)
+        #print(power)
+        if power >= 1000:
+            power = 1000
+        marker_color = 'blue' if power < 0.05 else 'red'
+        marker_size = 10 + power / 10  # Размер точки
+        marker_symbol = 'circle' if power < 0.05 else 'square'  # Форма точки
+
+        hover_text = f"Distance: {distance}<br>Angle: {scanAngle}<br>Power: {power}"
 
         fig = go.Figure(data=go.Scatterpolar(
             r=[distance],
             theta=[scanAngle],
             mode='markers',
+            marker=dict(
+                color=marker_color,  # Цвет точки
+                size=marker_size,  # Размер точки
+                symbol=marker_symbol  # Форма точки
+            ),
+            hovertext=hover_text,  # Текст при наведении
+            hoverinfo="text"  # Показываем только текст
         ))
 
         fig.update_layout(showlegend=False, polar=dict(radialaxis=dict(range=[0, 200])))
@@ -69,6 +115,8 @@ def send_config():
         "status_code": response.status_code,
         "response": response.text
     })
+
+
 
 if __name__ == "__main__":
     import threading

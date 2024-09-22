@@ -27,6 +27,7 @@ async def connect():
                 if 'echoResponses' in data and data['echoResponses'] != []:
                     data['distance'] = round(300_000 * data['echoResponses'][0]['time'] / 2, 2)
                     print(f"client:{data}")
+                    #print(f"client:{data['echoResponses'][0]['power']}")
                     cached_data = data  # Сохраняем данные в кэш
     except websockets.exceptions.ConnectionClosed as e:
         print(f"З'єднання закрито: {e.reason}")
